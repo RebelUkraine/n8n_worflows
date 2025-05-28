@@ -1,0 +1,149 @@
+{
+  "name": "Citywach",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "a5fa1ae0-e37e-4367-a2e3-123f5a7cc8b2",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        -80
+      ],
+      "webhookId": "random-id-123",
+      "credentials": {
+        "telegramApi": {
+          "id": "mKVFbZj7GHhKzQ0p",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.opencagedata.com/geocode/v1/json?q={{$json[\"message\"][\"text\"]}}&key=644556b5641b4d608f86c438cbe5e5d2",
+        "options": {}
+      },
+      "id": "fec0ab21-c0f2-452b-aae2-8f0687d86b67",
+      "name": "Get Coordinates",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        60,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "\nconst results = items[0].json.results;\nif (!results || results.length === 0) {\n    throw new Error(\"City not found.\");\n}\nconst lat = results[0].geometry.lat;\nconst lng = results[0].geometry.lng;\nreturn [{ json: { lat, lng } }];\n"
+      },
+      "id": "52ea8533-2bcb-45ef-acc0-1919b3f438aa",
+      "name": "Extract Lat/Lng",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        260,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=http://api.timezonedb.com/v2.1/get-time-zone?key=9KEGGMH03P7G&format=json&by=position&lat={{$json[\"lat\"]}}&lng={{$json[\"lng\"]}}",
+        "options": {}
+      },
+      "id": "4d1683de-fee6-4283-aa9a-5581bdeb31e6",
+      "name": "Get Time",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        460,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$node[\"Telegram Trigger\"].json[\"message\"][\"chat\"][\"id\"]}}",
+        "text": "={{\"Точний час у \" + $json[\"zoneName\"] + \": \" + $json[\"formatted\"]}}",
+        "additionalFields": {}
+      },
+      "id": "8ef7bbe5-4b26-437b-aed8-3060e46192b1",
+      "name": "Send Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        660,
+        -80
+      ],
+      "webhookId": "e0ccf2a7-c4e6-47b6-be04-790cbdd50629",
+      "credentials": {
+        "telegramApi": {
+          "id": "mKVFbZj7GHhKzQ0p",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Coordinates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Coordinates": {
+      "main": [
+        [
+          {
+            "node": "Extract Lat/Lng",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Lat/Lng": {
+      "main": [
+        [
+          {
+            "node": "Get Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Time": {
+      "main": [
+        [
+          {
+            "node": "Send Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ed858e2e-6c87-45fe-8036-fa2c52a059fe",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dfe13056a35c0bcb0e6997cefd0f83b01c5010a601300b5c4d3c8950af925086"
+  },
+  "id": "GhckZCdngeYGtOd2",
+  "tags": []
+}
